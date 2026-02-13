@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KSU 대한빙상경기연맹 - 2026 국가대표 공식 포털</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans KR', sans-serif; background-color: #f4f7f9; }
+        .hidden-content { display: none; }
+        .active-tab { border-bottom: 4px solid #1e3a8a; color: #1e3a8a; font-weight: bold; }
+        .insta-grid div { aspect-ratio: 1 / 1; overflow: hidden; cursor: pointer; }
+        .story-ring { padding: 3px; background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%); border-radius: 50%; }
+        
+        /* 포스트잇 스타일 */
+        .post-it { transition: transform 0.2s; cursor: default; }
+        .post-it:hover { transform: scale(1.05) rotate(0deg) !important; z-index: 10; }
+        
+        /* 공지사항 상세 스타일 (빙상연맹 느낌) */
+        .notice-stamp { border: 3px double #ef4444; color: #ef4444; transform: rotate(-15deg); display: inline-block; padding: 2px 8px; font-weight: bold; border-radius: 4px; opacity: 0.8; }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <div id="auth-modal" class="fixed inset-0 z-[100] bg-black/80 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-md w-full p-8 text-center">
+            <div class="mb-6 flex justify-center">
+                <div class="w-20 h-20 bg-blue-900 rounded-full flex items-center justify-center text-white font-bold text-2xl">KSU</div>
+            </div>
+            <h2 class="text-2xl font-black mb-2">선수 본인 인증</h2>
+            <p class="text-slate-500 mb-6 text-sm">2026 밀라노 올림픽 국가대표 통합 포털 접속을 위해 선수 정보를 입력해주세요.</p>
+            <input id="user-name-input" type="text" placeholder="성함 입력" class="w-full border p-3 rounded mb-3 focus:outline-blue-900">
+            <input type="text" placeholder="선수 등록번호 (KOR-2026-XXXX)" class="w-full border p-3 rounded mb-6 focus:outline-blue-900">
+            <button onclick="authenticate()" class="w-full bg-blue-900 text-white py-4 rounded-lg font-bold hover:bg-blue-800 transition">인증 및 접속</button>
+        </div>
+    </div>
+
+    <div id="main-app" class="hidden opacity-0 transition-opacity duration-1000">
+        <header class="bg-white border-b sticky top-0 z-40">
+            <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="bg-blue-900 text-white px-2 py-1 text-xs font-bold">KSU</span>
+                    <h1 class="text-lg font-black tracking-tighter text-blue-900">대한빙상경기연맹</h1>
+                </div>
+                <div class="text-xs text-slate-500 hidden md:block">
+                    로그인: <span id="user-display" class="font-bold text-slate-800"></span> 선수 (국가대표 A팀)
+                </div>
+            </div>
+            <nav class="bg-white border-b overflow-x-auto">
+                <div class="max-w-6xl mx-auto px-4 flex whitespace-nowrap">
+                    <button onclick="showSection('home')" class="tab-btn active-tab px-6 py-4 text-sm">홈</button>
+                    <button onclick="showSection('players')" class="tab-btn px-6 py-4 text-sm">선수단</button>
+                    <button onclick="showSection('media')" class="tab-btn px-6 py-4 text-sm">미디어센터</button>
+                    <button onclick="showSection('records')" class="tab-btn px-6 py-4 text-sm">기록실</button>
+                </div>
+            </nav>
+        </header>
+
+        <main class="max-w-6xl mx-auto p-4 pb-24">
+            <section id="home-section" class="content-section space-y-6">
+                <div class="relative rounded-xl overflow-hidden h-48 md:h-80 bg-slate-900">
+                    <img src="https://placehold.co/1200x800/1e3a8a/ffffff?text=Ice+Heartbeat+2026" class="w-full h-full object-cover opacity-60">
+                    <div class="absolute inset-0 p-8 flex flex-col justify-end text-white">
+                        <span class="bg-red-600 self-start px-2 py-1 text-xs font-bold mb-2">HOT NEWS</span>
+                        <h2 class="text-2xl md:text-4xl font-black mb-2">2026 밀라노 동계올림픽<br>국가대표 최종 명단 발표</h2>
+                        <p class="text-white/80 text-sm">대한빙상연맹, 쇼트트랙 남녀 총 12인 확정...</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border">
+                        <h3 class="font-bold mb-4 flex items-center justify-between">
+                            <span>📢 공지사항</span>
+                            <span class="text-slate-300 text-xs">CLICK TO READ</span>
+                        </h3>
+                        <ul class="text-sm space-y-3">
+                            <li onclick="openNotice(0)" class="flex justify-between border-b pb-2 cursor-pointer hover:bg-slate-50 transition"><span>[필독] 선수촌 내 미디어 노출 가이드라인</span> <span class="text-slate-400">02.11</span></li>
+                            <li onclick="openNotice(1)" class="flex justify-between border-b pb-2 cursor-pointer hover:bg-slate-50 transition"><span>도핑 방지 교육 이수 확인 안내 (정재윤 외 5명)</span> <span class="text-slate-400">02.10</span></li>
+                            <li onclick="openNotice(2)" class="flex justify-between border-b pb-2 cursor-pointer hover:bg-slate-50 transition font-bold text-blue-600"><span>고은결 선수, 월드컵 4차 1500m 금메달</span> <span class="text-slate-400">02.08</span></li>
+                        </ul>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm border">
+                        <h3 class="font-bold mb-4 flex items-center gap-2">📊 실시간 세계랭킹</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-black text-blue-900">1</span>
+                                    <span class="text-sm">정재윤 (500m)</span>
+                                </div>
+                                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">WORLD RECORD</span>
+                            </div>
+                            <div class="flex items-center justify-between border-t pt-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-black text-slate-400">2</span>
+                                    <span class="text-sm">고은결 (1500m)</span>
+                                </div>
+                                <span class="text-xs text-slate-400">9,850 pts</span>
+                            </div>
+                            <div class="flex items-center justify-between border-t pt-3">
+                                <div class="flex items-center gap-3">
+                                    <span class="font-black text-slate-400">8</span>
+                                    <span id="user-rank-name" class="text-sm font-bold text-red-600">YOU (1000m)</span>
+                                </div>
+                                <span class="text-xs text-red-600 font-bold">UP ↑</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-sm border">
+                    <h3 class="font-bold mb-6 flex items-center gap-2">💌 팬들의 익명 응원 한마디</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-slate-50 rounded-lg min-h-[400px]">
+                        <div class="post-it p-3 bg-yellow-200 shadow-md -rotate-2 text-xs font-medium h-24">고은결! 당신의 스케이팅은 예술입니다. 밀라노까지 부상 없이 가자!</div>
+                        <div class="post-it p-3 bg-blue-200 shadow-md rotate-3 text-xs font-medium h-24">재윤이 500m 스타트 볼 때마다 심장이 터질 것 같아요 ⚡️⚡️</div>
+                        <div class="post-it p-3 bg-pink-200 shadow-md -rotate-1 text-xs font-medium h-24">울 신예 선수님.. 기죽지 말고 링크 위에서 다 씹어먹어버려요!!</div>
+                        <div class="post-it p-3 bg-green-200 shadow-md rotate-2 text-xs font-medium h-24">쇼트트랙 국대즈 케미 실화냐.. 연맹은 빨리 브이로그 더 풀어라!!</div>
+                        <div class="post-it p-3 bg-orange-200 shadow-md -rotate-3 text-xs font-medium h-24">은결 오빠.. 허벅지 굵기 보고 입덕했습니다. 갓-벽-그-자-체</div>
+                        <div class="post-it p-3 bg-purple-200 shadow-md rotate-1 text-xs font-medium h-24">재윤아 라면 그만 먹어 ㅋㅋㅋ 그래도 1등 하는 게 킹받음 ❤️</div>
+                        <div class="post-it p-3 bg-yellow-100 shadow-md rotate-2 text-xs font-medium h-24">빙판 위에서 땀 흘리는 당신들의 모습이 가장 아름답습니다.</div>
+                        <div class="post-it p-3 bg-red-100 shadow-md -rotate-2 text-xs font-medium h-24">이번 밀라노는 우리가 접수한다!! 대한민국 쇼트트랙 파이팅!</div>
+                        <div class="post-it p-3 bg-blue-100 shadow-md rotate-1 text-xs font-medium h-24">국대 선발전 때부터 지켜봤어요. 끝까지 응원할게요!</div>
+                        <div class="post-it p-3 bg-pink-100 shadow-md -rotate-3 text-xs font-medium h-24">재윤-은결 조합 영원했으면.. 둘이 평생 은퇴하지 마요 ㅠㅠ</div>
+                        <div class="post-it p-3 bg-cyan-100 shadow-md rotate-2 text-xs font-medium h-24">새벽 훈련 힘들겠지만 조금만 더 힘내세요! 우리가 있잖아요!</div>
+                        <div class="post-it p-3 bg-emerald-100 shadow-md -rotate-1 text-xs font-medium h-24">누가 뭐래도 세계 최강은 K-쇼트트랙이다. 증명해버려!</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="players-section" class="content-section hidden-content space-y-6">
+                <h2 class="text-xl font-bold border-l-4 border-blue-900 pl-3">2026 국가대표 선수단</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white border rounded-xl overflow-hidden hover:shadow-lg transition">
+                        <img src=src="images/eungyeol.png" class="w-full h-64 object-cover">
+                        <div class="p-4 text-left">
+                            <div class="flex justify-between items-start mb-2">
+                                <div><h4 class="font-black text-lg">고은결 (28)</h4><p class="text-xs text-slate-500 italic">"Ice Captain"</p></div>
+                                <span class="text-xs bg-slate-100 px-2 py-1">주장 / 주종목: 1500m</span>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-4 h-10 overflow-hidden line-clamp-2">"너무 앞만 보고 달리지 마. 숨 찰 땐 뒤를 봐, 내가 바로 뒤에서 지켜보고 있을게."</p>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="openInstaProfile('eungyeol')" class="w-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 text-white py-2 rounded-lg text-xs font-bold">INSTAGRAM</button>
+                                <button onclick="startChat('eungyeol')" class="w-full bg-blue-900 text-white py-2 rounded-lg text-xs font-bold">MESSAGE</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white border rounded-xl overflow-hidden hover:shadow-lg transition">
+                        <img src="images/jaeyoon.png" class="w-full h-64 object-cover">
+                        <div class="p-4 text-left">
+                            <div class="flex justify-between items-start mb-2">
+                                <div><h4 class="font-black text-lg">정재윤 (26)</h4><p class="text-xs text-slate-500 italic">"Speed Demon"</p></div>
+                                <span class="text-xs bg-slate-100 px-2 py-1">천재 에이스 / 주종목: 500m</span>
+                            </div>
+                            <p class="text-sm text-slate-600 mb-4 h-10 overflow-hidden line-clamp-2">"야, 너 나 안 보면 못 타지? 맨날 나 있는 쪽 쳐다보던데."</p>
+                            <div class="flex flex-col gap-2">
+                                <button onclick="openInstaProfile('jaeyoon')" class="w-full bg-gradient-to-tr from-yellow-400 via-red-500 to-purple-500 text-white py-2 rounded-lg text-xs font-bold">INSTAGRAM</button>
+                                <button onclick="startChat('jaeyoon')" class="w-full bg-blue-900 text-white py-2 rounded-lg text-xs font-bold">MESSAGE</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white border border-dashed border-blue-400 rounded-xl overflow-hidden flex flex-col items-center justify-center p-8 bg-blue-50/30">
+                        <div class="w-24 h-24 bg-white rounded-full flex items-center justify-center text-4xl mb-4 shadow-inner">⛸️</div>
+                        <h4 class="font-bold text-lg" id="user-card-name">OOO 선수</h4>
+                        <p class="text-xs text-slate-400 mb-4">국가대표 선발전 통과</p>
+                        <button class="text-xs font-bold text-blue-900 border border-blue-900 px-4 py-2 rounded-full">프로필 수정하기</button>
+                    </div>
+                </div>
+            </section>
+
+<section id="media-section" class="content-section hidden-content space-y-12">
+    <h2 class="text-xl font-bold border-l-4 border-blue-900 pl-3">🎬 미디어 센터</h2>
+
+    <div class="bg-black rounded-xl overflow-hidden shadow-2xl">
+        <div class="relative aspect-video bg-slate-800 flex items-center justify-center group cursor-pointer">
+            <img src="https://placehold.co/1280x720/111/fff?text=National+Team+Vlog:+Ice+Kings+Chemistry" class="w-full h-full object-cover opacity-80">
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition">
+                    <div class="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white border-b-[15px] border-b-transparent ml-2"></div>
+                </div>
+            </div>
+            <div class="absolute bottom-4 left-4 flex gap-2 text-white text-xs bg-black/40 px-2 py-1 rounded"><span>21:45</span> / <span>30:00</span></div>
+        </div>
+        <div class="p-6 bg-white border-b">
+            <span class="text-blue-600 text-xs font-bold">#쇼트트랙 #국가대표 #고은결 #정재윤</span>
+            <h3 class="text-xl font-black">고은결 × 정재윤 케미 폭발?! 국가대표 선수들의 찐 훈련 브이로그 😆</h3>
+            <p class="text-sm text-slate-500 mt-2">조회수 234,567회 • 2일 전</p>
+            
+            <div class="mt-4 p-4 bg-slate-50 rounded-lg text-sm text-slate-600 leading-relaxed">
+                <p class="font-bold mb-2">훈련장인지 개그콘서트인지 헷갈리는 국대 훈련 현장 공개! 🇰🇷</p>
+                <p>많은 분이 기다려주신 고은결 & 정재윤 선수의 훈련 브이로그입니다. 
+                빙판 위에서는 세상 예민한 두 사람이 카메라만 꺼지면(안 꺼졌음) 이렇게 노는군요...</p>
+                <div class="mt-3 space-y-1 text-xs text-slate-500">
+                    <p>03:45 지각한 정재윤 선수 검거 현장</p>
+                    <p>08:20 고은결 선수의 '은밀한' 간식 창고 습격</p>
+                    <p>15:10 훈련 중 갑자기 시작된 외모 순위 배틀 (결과는?)</p>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between py-4 border-t border-b mt-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center text-white text-xs font-bold">KSU</div>
+                    <div><p class="text-sm font-bold">대한빙상경기연맹 KSU 공식 <span class="text-slate-400 font-normal">구독자 45.2만명</span></p></div>
+                </div>
+                <button class="bg-black text-white px-4 py-2 rounded-full text-sm font-bold">구독</button>
+            </div>
+        </div>
+        <div class="p-6 bg-gray-50">
+            <h4 class="font-bold text-sm mb-6 text-slate-700">댓글 892개</h4>
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-slate-300"></div>
+                    <div><p class="text-xs font-bold">icequeen_fan <span class="font-normal text-slate-400 ml-2">1일 전</span></p><p class="text-sm mt-1 text-slate-800">재윤이 형한테 혼날 때 표정 왜 저럼 ㅋㅋㅋㅋㅋㅋㅋㅋ 둘이 진짜 친한가보네</p></div>
+                </div>
+                <div class="flex gap-4 ml-12">
+                    <div class="w-8 h-8 rounded-full bg-blue-900 flex items-center justify-center text-white text-[10px]">KSU</div>
+                    <div><p class="text-xs font-bold">대한빙상경기연맹 <span class="bg-slate-200 px-1 rounded text-[10px]">작성자</span></p><p class="text-sm mt-1 text-slate-800">곧 공개될 다음 영상에서는 신예 선수와의 훈련 모습도 공개될 예정입니다! ❤️</p></div>
+                </div>
+            <div class="flex gap-4">
+                <div class="w-8 h-8 rounded-full bg-slate-300"></div>
+                <div><p class="text-xs font-bold">ice_mondu <span class="font-normal text-slate-400 ml-2">12시간 전</span></p><p class="text-sm mt-1 text-slate-800"> 하... 진짜 너무 잘생겼다. 잘생긴 사람 둘이 국대라니!! 영상 더 주세요 ㅠㅠ</p></div>
+            </div>
+
+</div>
+            </div>
+        </div>
+    <div class="bg-black rounded-xl overflow-hidden shadow-2xl">
+        <div class="relative aspect-video bg-slate-800 flex items-center justify-center group cursor-pointer">
+            <img src="https://placehold.co/1280x720/222/fff?text=National+Team+Vlog:+Prank+Cam" class="w-full h-full object-cover opacity-80">
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition">
+                    <div class="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white border-b-[15px] border-b-transparent ml-2"></div>
+                </div>
+            </div>
+            <div class="absolute bottom-4 left-4 flex gap-2 text-white text-xs bg-black/40 px-2 py-1 rounded"><span>12:05</span> / <span>15:00</span></div>
+        </div>
+        <div class="p-6 bg-white border-b">
+            <span class="text-blue-600 text-xs font-bold">#쇼트트랙 #국대비하인드 #고은결 #정재윤 #가방털기</span>
+            <h3 class="text-xl font-black">정재윤 가방에 몰래 아령 넣기 ㅋㅋㅋ 반응 개웃김 (feat. 캡틴의 장난기)</h3>
+            <p class="text-sm text-slate-500 mt-2">조회수 543,210회 • 1일 전</p>
+            
+            <div class="mt-4 p-4 bg-slate-50 rounded-lg text-sm text-slate-600 leading-relaxed">
+                <p>본격 정재윤 선수 하체 강화 프로젝트(?)를 가장한 고은결 선수의 장난질...</p>
+                <p class="mt-2 text-xs">본 영상은 정재윤 선수의 동의 없이 촬영되었으며, 촬영 후 고은결 선수는 한참을 도망 다녀야 했습니다. 쇼트트랙 국가대표 가방에는 과연 스케이트 말고 무엇이 들어있을까요?</p>
+            </div>
+
+            <div class="flex items-center justify-between py-4 border-t border-b mt-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center text-white text-xs font-bold">KSU</div>
+                    <div><p class="text-sm font-bold">대한빙상경기연맹 KSU 공식 <span class="text-slate-400 font-normal">구독자 45.2만명</span></p></div>
+                </div>
+                <button class="bg-black text-white px-4 py-2 rounded-full text-sm font-bold">구독</button>
+            </div>
+        </div>
+        <div class="p-6 bg-gray-50">
+            <h4 class="font-bold text-sm mb-6 text-slate-700">댓글 1,542개</h4>
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-slate-300"></div>
+                    <div><p class="text-xs font-bold">ice_love_m <span class="font-normal text-slate-400 ml-2">20시간 전</span></p><p class="text-sm mt-1 text-slate-800">08:42 고은결 선수 웃음 참느라 광대 폭발하는 거 킹받네 ㅋㅋㅋㅋ 둘이 진짜 찐친이다</p></div>
+                </div>
+                <div class="flex gap-4">
+                <div class="w-8 h-8 rounded-full bg-slate-300"></div>
+                <div><p class="text-xs font-bold">skate_fan_k <span class="font-normal text-slate-400 ml-2">15시간 전</span></p><p class="text-sm mt-1 text-slate-800">정재윤 선수 "오늘따라 가방이 왜 이리 무겁지... 컨디션 안 좋나?" 할 때 진심 불쌍하고 웃김 ㅠㅠ</p></div>
+            </div>
+            <div class="flex gap-4 ml-12 border-l-2 border-slate-200 pl-4">
+                <div class="w-8 h-8 rounded-full bg-blue-900 flex items-center justify-center text-white text-[10px]">KSU</div>
+                <div><p class="text-xs font-bold">대한빙상경기연맹 <span class="bg-slate-200 px-1 rounded text-[10px]">작성자</span></p><p class="text-sm mt-1 text-slate-800">촬영이 끝난 후 정재윤 선수는 고은결 선수의 스케이트 끈을 몰래 풀어놨다는 후문입니다. ^^</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div class="bg-black rounded-xl overflow-hidden shadow-2xl">
+        <div class="relative aspect-video bg-slate-800 flex items-center justify-center group cursor-pointer">
+            <img src="https://placehold.co/1280x720/001/fff?text=ISU+World+Cup+Final:+Men+500m" class="w-full h-full object-cover opacity-80">
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition">
+                    <div class="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white border-b-[15px] border-b-transparent ml-2"></div>
+                </div>
+            </div>
+            <div class="absolute bottom-4 left-4 flex gap-2 text-white text-xs bg-black/40 px-2 py-1 rounded"><span>03:20</span> / <span>03:20</span></div>
+        </div>
+        <div class="p-6 bg-white border-b">
+            <span class="text-blue-600 text-xs font-bold">#ISU월드컵 #결승전 #고은결 #금메달 #하이라이트</span>
+            <h3 class="text-xl font-black">[HL] "이걸 들어옵니다!" 고은결, 마지막 코너 인코스 기적의 추월 🥇</h3>
+            <p class="text-sm text-slate-500 mt-2">조회수 2,104,882회 • 10시간 전</p>
+            
+            <div class="mt-4 p-4 bg-slate-50 rounded-lg text-sm text-slate-600 leading-relaxed">
+                <p class="font-bold">[2026 ISU 쇼트트랙 월드컵 4차 대회 - 남자 500m 결승]</p>
+                <p class="mt-2 text-xs">피 말리는 판정 대기 끝에 확정된 금메달! 고은결 선수의 환상적인 코너링을 다시 한 번 감상하세요. 전 세계를 놀라게 한 저속 추월의 정석입니다.</p>
+                <p class="mt-2 text-[10px] text-slate-400">ⓒ 대한빙상경기연맹 All Rights Reserved.</p>
+            </div>
+
+            <div class="flex items-center justify-between py-4 border-t border-b mt-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center text-white text-xs font-bold">KSU</div>
+                    <div><p class="text-sm font-bold">대한빙상경기연맹 KSU 공식 <span class="text-slate-400 font-normal">구독자 45.2만명</span></p></div>
+                </div>
+                <button class="bg-black text-white px-4 py-2 rounded-full text-sm font-bold">구독</button>
+            </div>
+        </div>
+        <div class="p-6 bg-gray-50">
+            <h4 class="font-bold text-sm mb-6 text-slate-700">댓글 4,512개</h4>
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-slate-300"></div>
+                    <div><p class="text-xs font-bold">short_king <span class="font-normal text-slate-400 ml-2">8시간 전</span></p><p class="text-sm mt-1 text-slate-800">02:45 캐스터 목소리 넘어가는 거 봐 ㅋㅋㅋㅋ "고은결! 고은결!!" 할 때 온몸에 소름 돋음</p></div>
+                </div>
+               <div class="flex gap-4">
+                <div class="w-8 h-8 rounded-full bg-slate-300"></div>
+                <div><p class="text-xs font-bold">skate_master <span class="font-normal text-slate-400 ml-2">7시간 전</span></p><p class="text-sm mt-1 text-slate-800">판정 대기할 때 은결 선수 긴장해서 전광판만 보는 거... 진짜 숨 막히더라. 깔끔한 추월 인정!</p></div>
+            </div>
+            <div class="flex gap-4 ml-12 border-l-2 border-slate-200 pl-4">
+                <div class="w-8 h-8 rounded-full bg-blue-900 flex items-center justify-center text-white text-[10px]">KSU</div>
+                <div><p class="text-xs font-bold">대한빙상경기연맹 <span class="bg-slate-200 px-1 rounded text-[10px]">작성자</span></p><p class="text-sm mt-1 text-slate-800">현장의 열기를 그대로! 여러분의 응원이 금메달을 만들었습니다. 🇰🇷</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <div class="bg-black rounded-xl overflow-hidden shadow-2xl">
+        <div class="relative aspect-video bg-slate-800 flex items-center justify-center group cursor-pointer">
+            <img src="https://placehold.co/1280x720/111/fff?text=Jae-yoon:+The+Ice+Visual+Shock" class="w-full h-full object-cover opacity-80">
+            <div class="absolute top-4 left-4 bg-yellow-400 text-black px-2 py-1 text-[10px] font-bold rounded">인기 급상승 #1</div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-20 h-20 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition">
+                    <div class="w-0 h-0 border-t-[15px] border-t-transparent border-l-[25px] border-l-white border-b-[15px] border-b-transparent ml-2"></div>
+                </div>
+            </div>
+            <div class="absolute bottom-4 left-4 flex gap-2 text-white text-xs bg-black/40 px-2 py-1 rounded"><span>00:45</span> / <span>01:30</span></div>
+        </div>
+        <div class="p-6 bg-white border-b">
+            <span class="text-blue-600 text-xs font-bold">#정재윤 #쇼트트랙 #비주얼레전드 #입덕영상 #미모화제</span>
+            <h3 class="text-xl font-black">[입덕] 경기장 비명 지르게 만든 '헬멧 탈수' 정재윤 5초 컷.. 이건 유료로 봐야 함 😍</h3>
+            <p class="text-sm text-slate-500 mt-2">조회수 3,456,112회 • 12시간 전</p>
+            
+            <div class="mt-4 p-4 bg-pink-50 rounded-lg text-sm text-slate-600 leading-relaxed border border-pink-100">
+                <p>⚠️ 시력 보호 주의 ⚠️</p>
+                <p class="mt-1">중계 화면에 5초 잡혔는데 그날 실시간 검색어 장악했던 그 영상 맞습니다. 
+                많은 팬의 요청으로 고화질 원본 데이터 긴급 수혈해 왔습니다.</p>
+                <p class="mt-2 font-bold text-pink-500 text-xs">※ 무단 전재 및 배포 시 '감사합니다'.</p>
+            </div>
+
+            <div class="flex items-center justify-between py-4 border-t border-b mt-6">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-900 rounded-full flex items-center justify-center text-white text-xs font-bold">KSU</div>
+                    <div><p class="text-sm font-bold">대한빙상경기연맹 KSU 공식 <span class="text-slate-400 font-normal">구독자 45.2만명</span></p></div>
+                </div>
+                <button class="bg-black text-white px-4 py-2 rounded-full text-sm font-bold">구독</button>
+            </div>
+        </div>
+        <div class="p-6 bg-gray-50">
+            <h4 class="font-bold text-sm mb-6 text-slate-700">댓글 7,892개</h4>
+            <div class="space-y-6">
+                <div class="flex gap-4">
+                    <div class="w-8 h-8 rounded-full bg-pink-300"></div>
+                    <div><p class="text-xs font-bold">jaeyoon_wife <span class="font-normal text-slate-400 ml-2">10시간 전</span></p><p class="text-sm mt-1 text-slate-800">00:15 땀 닦으면서 카메라랑 눈 마주치고 씩 웃는데 내 심장 박살남.. 책임져 정재윤 ㅠㅠㅠ</p></div>
+                </div>
+            <div class="flex gap-4">
+                <div class="w-8 h-8 rounded-full bg-slate-300"></div>
+                <div><p class="text-xs font-bold">ice_visual_picker <span class="font-normal text-slate-400 ml-2">9시간 전</span></p><p class="text-sm mt-1 text-slate-800">아니 실력도 국대인데 얼굴도 국대면 어쩌자는 거임? 신은 불공평하다 진짜</p></div>
+            </div>
+            <div class="flex gap-4 ml-12 border-l-2 border-slate-200 pl-4">
+                <div class="w-8 h-8 rounded-full bg-blue-900 flex items-center justify-center text-white text-[10px]">KSU</div>
+                <div><p class="text-xs font-bold">대한빙상경기연맹 <span class="bg-slate-200 px-1 rounded text-[10px]">작성자</span></p><p class="text-sm mt-1 text-slate-800">서버 터질까 봐 무서워서 못 올릴 뻔했습니다..^^ 다음 영상은 고은결 선수 버전입니다!</p></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</section>
+
+            <section id="records-section" class="content-section hidden-content space-y-6">
+                <div class="bg-blue-900 text-white p-8 rounded-xl">
+                    <h2 class="text-2xl font-black mb-4">📊 국가대표 통합 기록실</h2>
+                    <div class="flex gap-2">
+                        <input id="search-input" type="text" placeholder="선수 이름을 입력하세요" class="flex-1 p-3 rounded text-slate-800 focus:outline-none">
+                        <button onclick="searchRecord()" class="bg-white text-blue-900 px-6 py-3 rounded font-black">검색</button>
+                    </div>
+                </div>
+                <div id="search-result" class="hidden space-y-4"></div>
+            </section>
+        </main>
+
+        <div class="fixed bottom-0 inset-x-0 bg-white border-t flex justify-around p-3 md:hidden z-40">
+            <button onclick="showSection('home')" class="text-xs flex flex-col items-center gap-1 text-slate-400"><span class="text-xl">🏠</span>홈</button>
+            <button onclick="showSection('players')" class="text-xs flex flex-col items-center gap-1 text-slate-400"><span class="text-xl">👥</span>선수단</button>
+            <button onclick="showSection('media')" class="text-xs flex flex-col items-center gap-1 text-slate-400"><span class="text-xl">🎬</span>미디어</button>
+            <button onclick="showSection('records')" class="text-xs flex flex-col items-center gap-1 text-slate-400"><span class="text-xl">📈</span>기록</button>
+        </div>
+    </div>
+
+    <div id="notice-modal" class="fixed inset-0 z-[250] bg-black/70 hidden items-center justify-center p-4">
+        <div class="bg-white w-full max-w-2xl p-8 rounded-lg shadow-2xl relative overflow-y-auto max-h-[90vh]">
+            <div class="border-b-2 border-slate-900 pb-4 mb-6">
+                <div class="flex justify-between items-start">
+                    <h2 id="notice-title" class="text-2xl font-black text-slate-900">공지사항 제목</h2>
+                    <div class="notice-stamp text-sm">KSU 공식인증</div>
+                </div>
+                <p id="notice-date" class="text-slate-400 text-sm mt-2">2026.02.11</p>
+            </div>
+            <div id="notice-body" class="text-slate-700 leading-relaxed whitespace-pre-line text-sm md:text-base">내용이 들어갑니다.</div>
+            <div class="mt-12 pt-6 border-t border-slate-100 flex justify-between items-center text-xs text-slate-400">
+                <p>발신: 대한빙상경기연맹 사무국</p>
+                <button onclick="closeNotice()" class="bg-slate-900 text-white px-6 py-2 rounded font-bold text-sm">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="insta-profile-modal" class="fixed inset-0 z-[200] bg-black/70 hidden items-center justify-center p-0 md:p-10 overflow-y-auto">
+        <div class="bg-white w-full max-w-2xl min-h-screen md:min-h-0 md:rounded-xl overflow-hidden relative">
+            <div class="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-10"><button onclick="closeInstaProfile()" class="text-2xl">✕</button><span id="p-header-handle" class="font-bold">handle</span><div class="w-6"></div></div>
+            <div class="p-6 flex flex-col gap-6">
+                <div class="flex items-center gap-8">
+                    <div class="story-ring cursor-pointer" onclick="showStory()"><div id="p-avatar" class="w-20 h-20 rounded-full border-2 border-white bg-slate-200 overflow-hidden"><img src="" class="w-full h-full object-cover"></div></div>
+                    <div class="flex-1 flex justify-around text-center"><div><p class="font-bold">3</p><p class="text-xs text-slate-500">게시물</p></div><div><p class="font-bold" id="p-follower">12.5k</p><p class="text-xs text-slate-500">팔로워</p></div><div><p class="font-bold">152</p><p class="text-xs text-slate-500">팔로잉</p></div></div>
+                </div>
+                <div><p class="font-bold text-sm" id="p-name">이름</p><p class="text-sm text-slate-600 whitespace-pre-line mt-1" id="p-bio">바이오</p></div>
+                <div class="flex gap-2"><button class="flex-1 bg-blue-500 text-white font-bold py-2 rounded-lg text-sm">팔로우</button><button class="flex-1 bg-slate-100 font-bold py-2 rounded-lg text-sm">메시지</button></div>
+            </div>
+            <div class="grid grid-cols-3 gap-1 p-1 border-t" id="p-grid"></div>
+        </div>
+    </div>
+
+    <div id="insta-post-modal" class="fixed inset-0 z-[300] bg-black/90 hidden items-center justify-center p-0 md:p-10">
+        <div class="bg-white w-full max-w-4xl h-full md:h-auto md:rounded-xl overflow-hidden flex flex-col md:flex-row relative">
+            <div class="w-full md:w-[60%] bg-black flex items-center justify-center"><img id="post-img" src="" class="max-h-full"></div>
+            <div class="w-full md:w-[40%] flex flex-col bg-white">
+                <div class="p-4 border-b flex items-center gap-3"><div id="post-avatar" class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden"><img src="" class="w-full h-full object-cover"></div><span id="post-handle" class="font-bold text-sm">handle</span></div>
+                <div class="p-4 flex-1 overflow-y-auto text-sm"><p id="post-caption" class="mb-4 text-slate-800"></p><div id="post-comments" class="space-y-4 border-t pt-4"></div></div>
+                <button onclick="closePostDetail()" class="absolute top-4 right-4 text-white text-3xl md:text-black">✕</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="story-view" class="fixed inset-0 z-[400] bg-slate-900 hidden items-center justify-center">
+        <div class="relative w-full max-w-md aspect-[9/16] bg-black shadow-2xl overflow-hidden">
+            <div class="absolute top-4 left-4 flex items-center gap-2 text-white"><div id="story-avatar" class="w-8 h-8 rounded-full border border-white bg-slate-300 overflow-hidden"><img src="" class="w-full h-full object-cover"></div><span id="story-handle" class="text-xs font-bold">handle</span></div>
+            <img id="story-img" src="" class="w-full h-full object-cover">
+            <button onclick="closeStory()" class="absolute top-4 right-4 text-white text-2xl">✕</button>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = "";
+        let currentCharacter = "";
+
+        const notices = [
+            { title: "[필독] 선수촌 내 미디어 노출 가이드라인", date: "2026.02.11", body: "대한빙상경기연맹에서 알립니다.\n\n올림픽 기간 중 선수촌 내에서의 개인 방송 및 미디어 노출에 대한 엄격한 제한이 시행됩니다.\n\n1. 연습 장면의 3분 이상 실시간 스트리밍 금지\n2. 타 국가 선수의 노출 주의\n3. 상업적 광고 촬영 사전 승인 필수\n\n위반 시 국가대표 자격 정지 등 강력한 징계가 있을 수 있으니 각별히 유의하시기 바랍니다." },
+            { title: "도핑 방지 교육 이수 확인 안내 (정재윤 외 5명)", date: "2026.02.10", body: "본인 인증을 완료하지 않은 선수는 즉시 교육 이수 수료증을 사무국으로 제출하시기 바랍니다.\n\n대상자: 정재윤, 김민준, 이수현, 고은결(재이수), 박지호, 최연우\n기한: 금일 18:00까지\n\n미제출 시 훈련 참여에 제한이 있을 수 있습니다." },
+            { title: "고은결 선수, 월드컵 4차 1500m 금메달", date: "2026.02.08", body: "축하합니다!\n\n지난 7일 열린 쇼트트랙 월드컵 4차 대회 남자 1500m 결승에서 고은결 선수가 환상적인 아웃코스 추월로 금메달을 획득하였습니다.\n\n정재윤 선수 또한 500m 부문에서 세계 신기록을 경신하며 은메달을 확보하였습니다." }
+        ];
+
+        const charData = {
+            eungyeol: {
+                handle: "eungyeol_skater", name: "고은결 (GO EUNGYEOL)", bio: "⛸️ Shorttrack Speed Skater\n🇰🇷 Team Korea National Captain\n❄️ Ice is my life.", follower: "154k", avatar: "images/eungyeol-avatar.png", story: "images/eungyeol-story.png",
+                posts: [
+                    { img: "images/eungyeol-post1.png", caption: "<b>eungyeol_skater</b> 준비는 디테일에서 완성된다.", comments: [{ user: "jjaeyoon_0723", text: "형, 그러다 링크장 바닥 뚫리겠어요 ㅋㅋ" }, { user: "icequeen_fan", text: "와... 캡틴 카리스마 무엇..." }, { user: "skate_mania", text: "형님 겁나 멋있어요. 올림픽 뿌셔주세요!!" }, { user: "ksu_official", text: "파이팅입니다 캡틴!" }] },
+                    { img: "images/eungyeol-post2.png", caption: "<b>eungyeol_skater</b> 팀 코리아. 🇰🇷", comments: [{ user: "skater_park", text: "가즈아아아!" }] },
+                    { img: "images/eungyeol-post3.png", caption: "<b>eungyeol_skater</b> 휴식.", comments: [{ user: "jjaeyoon_0723", text: "형 혼자 좋은데 갔네?" }] }
+                ]
+            },
+            jaeyoon: {
+                handle: "jjaeyoon_0723", name: "정재윤 (JUNG JAE YOON)", bio: "⚡️ Speed Demon\n🥇 World Record Holder (500m)\n🍜 Ramen lover.", follower: "289k", avatar: "images/jaeyoon-avatar.png", story: "images/jaeyoon-story.png",
+                posts: [
+                    { img: "images/jaeyoon-post1.png", caption: "<b>jjaeyoon_0723</b> 새벽 훈련 보상 🍜 비밀~", comments: [{ user: "eungyeol_skater", text: "라면 그만 먹어." }, { user: "fan_012", text: "누구예요?? 누구랑 먹는거야!!" }, { user: "mystery_guest", text: "맛있더라 ㅋㅋ" }] },
+                    { img: "images/jaeyoon-post2.png", caption: "<b>jjaeyoon_0723</b> 새로운 장비! ⚡️", comments: [{ user: "equipment_expert", text: "오 이번 세팅 좋네요" }] },
+                    { img: "images/jaeyoon-post3.png", caption: "<b>jjaeyoon_0723</b> 오운완.", comments: [{ user: "fan_999", text: "미모 미쳤다..." }] }
+                ]
+            }
+        };
+
+        function authenticate() {
+            const nameInput = document.getElementById('user-name-input');
+            if(nameInput.value.trim() === "") { alert("선수 성함을 입력해주세요."); return; }
+            currentUser = nameInput.value;
+            document.getElementById('user-display').innerText = currentUser;
+            document.getElementById('user-card-name').innerText = currentUser + " 선수";
+            document.getElementById('user-rank-name').innerText = currentUser + " (1000m)";
+            document.getElementById('auth-modal').classList.add('hidden');
+            const mainApp = document.getElementById('main-app');
+            mainApp.classList.remove('hidden');
+            setTimeout(() => mainApp.classList.add('opacity-100'), 50);
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.content-section').forEach(s => s.classList.add('hidden-content'));
+            document.getElementById(sectionId + '-section').classList.remove('hidden-content');
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active-tab'));
+            event.currentTarget.classList.add('active-tab');
+        }
+
+        function openNotice(idx) {
+            document.getElementById('notice-title').innerText = notices[idx].title;
+            document.getElementById('notice-date').innerText = notices[idx].date;
+            document.getElementById('notice-body').innerText = notices[idx].body;
+            document.getElementById('notice-modal').classList.remove('hidden');
+            document.getElementById('notice-modal').classList.add('flex');
+        }
+        function closeNotice() { document.getElementById('notice-modal').classList.add('hidden'); }
+
+        function openInstaProfile(char) {
+            currentCharacter = char; const data = charData[char];
+            document.getElementById('p-header-handle').innerText = data.handle;
+            document.getElementById('p-avatar').querySelector('img').src = data.avatar;
+            document.getElementById('p-follower').innerText = data.follower;
+            document.getElementById('p-name').innerText = data.name;
+            document.getElementById('p-bio').innerText = data.bio;
+            const grid = document.getElementById('p-grid'); grid.innerHTML = "";
+            data.posts.forEach((post, index) => {
+                const div = document.createElement('div'); div.className = "bg-slate-100";
+                div.innerHTML = `<img src="${post.img}" class="w-full h-full object-cover" onclick="openPostDetail(${index})">`;
+                grid.appendChild(div);
+            });
+            document.getElementById('insta-profile-modal').classList.remove('hidden'); document.getElementById('insta-profile-modal').classList.add('flex');
+        }
+        function closeInstaProfile() { document.getElementById('insta-profile-modal').classList.add('hidden'); }
+
+        function openPostDetail(index) {
+            const data = charData[currentCharacter]; const post = data.posts[index];
+            document.getElementById('post-img').src = post.img; document.getElementById('post-avatar').querySelector('img').src = data.avatar;
+            document.getElementById('post-handle').innerText = data.handle; document.getElementById('post-caption').innerHTML = post.caption;
+            const commDiv = document.getElementById('post-comments'); commDiv.innerHTML = "";
+            post.comments.forEach(c => { commDiv.innerHTML += `<p><b>${c.user}</b> ${c.text}</p>`; });
+            document.getElementById('insta-post-modal').classList.remove('hidden'); document.getElementById('insta-post-modal').classList.add('flex');
+        }
+        function closePostDetail() { document.getElementById('insta-post-modal').classList.add('hidden'); }
+
+        function showStory() {
+            const data = charData[currentCharacter];
+            document.getElementById('story-img').src = data.story; document.getElementById('story-avatar').querySelector('img').src = data.avatar;
+            document.getElementById('story-handle').innerText = data.handle;
+            document.getElementById('story-view').classList.remove('hidden'); document.getElementById('story-view').classList.add('flex');
+        }
+        function closeStory() { document.getElementById('story-view').classList.add('hidden'); }
+
+        function searchRecord() {
+    const query = document.getElementById('search-input').value.trim();
+    const resultDiv = document.getElementById('search-result');
+    resultDiv.classList.remove('hidden');
+
+    // 1. 유저 본인 검색 시
+    if (query === currentUser) {
+        resultDiv.innerHTML = `
+            <div class="bg-white p-6 rounded-xl border-2 border-blue-500 shadow-xl scale-in">
+                <h4 class="font-black text-xl mb-4 text-blue-900">🔍 보안 아카이브: ${currentUser} (본인)</h4>
+                <div class="space-y-4">
+                    <div class="bg-blue-50 p-4 rounded border-l-4 border-blue-400">
+                        <p class="text-[10px] font-bold text-blue-500 mb-1 uppercase">📋 Official: Training Log by 고은결</p>
+                        <p class="text-sm font-medium text-slate-700">"폼 많이 좋아졌다. 오늘 컨디션 안 좋아 보이던데, 무리하지 말고 쉬엄쉬엄해"</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded border-l-4 border-slate-300">
+                        <p class="text-[10px] font-bold text-slate-400 mb-1 uppercase">📁 Private: Memo by 정재윤</p>
+                        <p class="text-sm italic text-slate-600">"아까 링크장에서 넘어져놓고 창피해서 웃는 거 진짜 웃기네 ㅋㅋㅋ 아, 자꾸 생각나서 훈련 집중 안 됨. 이거 병인가?"</p>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded border-l-4 border-red-500 animate-pulse">
+                        <p class="text-xs font-bold text-red-600 mb-1">⚠️ Restricted Access</p>
+                        <p class="text-sm font-bold text-red-800">호감도가 부족합니다. [숨겨진 과거] 데이터 해금.</p>
+                    </div>
+                </div>
+            </div>`;
+    } 
+// 2. 고은결 검색 시
+    else if (query === "고은결") {
+        resultDiv.innerHTML = `
+            <div class="bg-slate-900 p-6 rounded-xl border-2 border-blue-900 shadow-xl text-white">
+                <h4 class="font-black text-xl mb-4 text-blue-200">🔍 보안 아카이브: 고은결 (Captin)</h4>
+                <div class="space-y-4">
+                    <div class="bg-slate-800 p-4 rounded border-l-4 border-blue-600">
+                        <p class="text-[10px] font-bold text-blue-400 mb-1 uppercase">📊 Career Status</p>
+                        <p class="text-sm">올림픽 금메달 3개, 세계선수권 종합 우승 5회. 현재 국가대표팀 주장.</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded border-l-4 border-orange-400">
+                        <p class="text-[10px] font-bold text-orange-400 mb-1 uppercase">📁 Observation: 정재윤의 관찰 일지</p>
+                        <p class="text-sm italic text-slate-300">"형은 다 좋은데 가끔 너무 다정해서 문제임. ${currentUser} 훈련할 때 옆에서 꿀 떨어지는 눈으로 보고 있으면 내가 다 간지러워서 링크장을 못 타겠음. 형, 나도 코코아 좋아한다고!"</p>
+                    </div>
+                    <div class="bg-slate-800 p-4 rounded border-l-4 border-emerald-500">
+                        <p class="text-[10px] font-bold text-emerald-400 mb-1 uppercase">📁 Confidential: 감독님의 평가</p>
+                        <p class="text-sm text-slate-300">"은결이가 지도자로 전향하고 팀 분위기가 너무 유해졌다. 예전엔 얼음 같더니, 요즘은 애들 기 살려준다고 간식 챙기기 바쁘네. 특히 ${currentUser} 선수는 본인이 직접 키우겠다고 선언했으니 믿고 맡겨봄."</p>
+                    </div>
+                </div>
+            </div>`;
+    } 
+    // 3. 정재윤 검색 시
+    else if (query === "정재윤") {
+        resultDiv.innerHTML = `
+            <div class="bg-white p-6 rounded-xl border-2 border-orange-400 shadow-xl">
+                <h4 class="font-black text-xl mb-4 text-orange-900">🔍 보안 아카이브: 정재윤 (Athlete)</h4>
+                <div class="space-y-4">
+                    <div class="bg-orange-50 p-4 rounded border-l-4 border-orange-400">
+                        <p class="text-[10px] font-bold text-orange-500 mb-1 uppercase">🎖️ Current Status</p>
+                        <p class="text-sm text-slate-800">차세대 에이스. 가공할만한 순발력과 피지컬. (비공식: 팬클럽 회원 수 팀 내 1위)</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded border-l-4 border-blue-500">
+                        <p class="text-[10px] font-bold text-blue-500 mb-1 uppercase">📁 Coaching Note: 고은결 코치</p>
+                        <p class="text-sm text-slate-700">"재윤이는 천부적인 감각이 있지만 집중력이 금방 흐트러짐. 특히 ${currentUser} 선수랑 같이 있으면 장난칠 생각만 하는 듯. 하지만 미워할 수 없는 녀석. 어제 훈련 끝나고 ${currentUser} 선수 주려고 산 사탕, 재윤이가 다 먹은 거 모르는 척해줬다."</p>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded border-l-4 border-slate-400">
+                        <p class="text-[10px] font-bold text-slate-400 mb-1 uppercase">📁 Secret: 익명의 동료 메모</p>
+                        <p class="text-sm italic text-slate-600">"정재윤 쟤는 ${currentUser} 선수?만 나타나면 평소보다 두 배는 더 열심히 타는 것 같음. 잘 보이고 싶어서 그러는 건지, 라이벌 의식인지... 어쨌든 둘이 붙여놓으면 훈련 강도가 저절로 올라가서 감독님이 좋아하심."</p>
+                    </div>
+                </div>
+            </div>`;
+    }
+    // 4. 검색 결과 없을 시
+    else {
+        resultDiv.innerHTML = `<div class="text-center py-10"><p class="text-slate-400">해당 인물에 대한 기록을 찾을 수 없습니다.</p><p class="text-xs text-slate-300 mt-2">(검색어: ${currentUser}, 고은결, 정재윤)</p></div>`;
+    }
+}
+        function startChat(char) { alert(char + " 선수와의 메시지 스테이지로 이동합니다!"); }
+    </script>
+</body>
+</html>
